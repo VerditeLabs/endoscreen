@@ -57,15 +57,16 @@ def gendb(masterpath):
             chem = 'chem:' + line['Chemical'].strip().lower()
             outcomes = ['outcome:' + x.strip().lower() for x in line['Outcomes'].split(',')]
 
-            entry = db.get(pmid, {'pmid': pmid, 'related': set()})
-            entry['related'].update({cid, chem, *outcomes})
-            db[pmid] = entry
-
             entry = db.get(cid, {'cid': cid, 'name': chem, 'related': set()})
             if chem != entry['name']:
+                chem = entry['name']
                 print('cid mismatch', chem, entry['name'])
             entry['related'].update({pmid, *outcomes})
             db[cid] = entry
+
+            entry = db.get(pmid, {'pmid': pmid, 'related': set()})
+            entry['related'].update({cid, chem, *outcomes})
+            db[pmid] = entry
 
             entry = db.get(chem, {'name': chem, 'cid':cid, 'related': set()})
             entry['related'].update({pmid, cid, *outcomes})

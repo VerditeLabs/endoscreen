@@ -193,7 +193,7 @@ def gen_tfidf():
         if i >= 2000000:
             break
 
-    with open('../termsdb.json','r') as f:
+    with open('../data/termsdb.json', 'r') as f:
         papers, chems = json.load(f)
     goodtexts = list()
     for p in papers:
@@ -218,7 +218,7 @@ def gen_tfidf():
         baddict[ele1] = ele2
 
 
-with open('../termsdb.json','r') as f:
+with open('../data/termsdb.json', 'r') as f:
     papers, chems = json.load(f)
 goodtexts = list()
 for p in papers:
