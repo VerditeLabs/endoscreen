@@ -62,6 +62,8 @@ def gendb(masterpath):
             db[pmid] = entry
 
             entry = db.get(cid, {'cid': cid, 'name': chem, 'related': set()})
+            if chem != entry['name']:
+                print('cid mismatch', chem, entry['name'])
             entry['related'].update({pmid, *outcomes})
             db[cid] = entry
 
@@ -74,6 +76,8 @@ def gendb(masterpath):
                 entry['related'].update({pmid, cid, chem})
                 db[outcome] = entry
 
+    for k,v in db.items():
+        db[k]['related'] = sorted(v['related'])
     return db
 
 def genindex(db):
@@ -99,11 +103,7 @@ class EDCDB():
         if ver != 'v1':
             return dict()
         if func == 'fetch':
-            for k, v in self.db.items():
-                if k == query:
-                    return v
-            else:
-                return dict()
+            return self.db.get(query, dict())
         elif func == 'search':
             return self.index.query(query)
 

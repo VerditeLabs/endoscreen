@@ -1,37 +1,60 @@
-"""Welcome to Pynecone! This file outlines the steps to create a basic app."""
-from pcconfig import config
-from typing import Any
 import pynecone as pc
-
+import json
+from .edcdb import EDCDB
 
 class State(pc.State):
     """The app state."""
-    pass
+    search_text: str
+    fetch_text: str
 
-class Camera(pc.Component):
-    library = "react-camera-pro"
-    tag = "Camera"
-    #camera: pc.Var
-    image: pc.Var[str]  # base64 encoded image
+    def search_set_text(self, text: str):
+        self.search_text = text
 
-    @classmethod
-    def get_controlled_triggers(cls) -> dict[str, pc.Var]:
-        return {"on_click": pc.EVENT_ARG}
+    def fetch_set_text(self, text: str):
+        self.fetch_text = text
 
-class CameraState(pc.State):
-    #camera: Any = None
-    image: str = ""
+    @pc.var
+    def search_results(self) -> list[str]:
+        return edcdb.api('v1', 'search', self.search_text)[:10]
+
+    @pc.var
+    def fetch_results(self) -> str:
+        print(self.fetch_text)
+        print(edcdb.api('v1','fetch', self.fetch_text))
+        #return self.fetch_text
+        return json.dumps(edcdb.api('v1','fetch', self.fetch_text))
+
+
+
+
+def search() -> pc.Component:
+    return pc.vstack(
+        pc.input(
+            placeholder="Search EDCDB...",
+            value=State.search_text,
+            on_change=State.search_set_text,
+        ),
+        pc.foreach(State.search_results, lambda result: pc.text(result)),
+        pc.input(
+            placeholder="Fetch EDCDB...",
+            value=State.fetch_text,
+            on_change=State.fetch_set_text,
+        ),
+        pc.text(State.fetch_results),
+    )
+
 
 
 def index() -> pc.Component:
     return pc.center(
-        pc.text("asdf"),
-        Camera.create(on_click=CameraState.set_image),
-        pc.text("asdf"),
-        pc.Image(src=CameraState.image)
+        pc.vstack(
+            #navbar(),
+            search()
 
+        )
     )
 
+edcdb = EDCDB('./Endoscreen_database.csv')
 
 # Add state and page to the app.
 app = pc.App(state=State)
