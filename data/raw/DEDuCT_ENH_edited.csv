@@ -1,4 +1,4 @@
-Primary identifier,Name,Literature identifier,Outcome
+cid,chem,pmid,outcome
 CID:63090,"3,4,5,3',4'-Pentachlorobiphenyl",DOI:10.1002/etc.5620140607,Cognitive-Behavioral
 CID:6129,Carbaryl,DOI:10.1016/0013-9351(74)90039-5,Reproductive
 CID:114896,"Dibenzo(b,e)(1,4)dioxin, 2-bromo-3,7,8-trichloro-",DOI:10.1016/0045-6535(91)90040-K,Cell damage

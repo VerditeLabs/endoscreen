@@ -1,4 +1,4 @@
-PMID,CID/CAS,Chemical,Outcomes
+pmid,cid,chem,outcome
 35654127,17412, 3-Methyl-4-Nitrophenol,"Reproductive, Genetic"
 35093747,1905602,"9-(nonafluorobutyl)-2,3,6,7-tetrahydro-1H,5H,11H-pyrano[2,3-f]pyrido[3,2,1-ij]quinolin-11-one","Reproductive, Genetic"
 36035158,3035,Dichlorodiphenyldichloroethylene,Genetic
