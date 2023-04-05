@@ -1,5 +1,6 @@
 import pynecone as pc
 import json
+import os
 try:
     from edcdb import EDCDB
 except:
@@ -8,14 +9,27 @@ except:
     except:
         raise
 
+ROOTDIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
+LAST_OCR = ''
+
 class State(pc.State):
-    """The app state."""
-    search_text: str
-    fetch_text: str
-    img: str
+    search_text: str = ""
+    fetch_text: str = ""
+    ocr_results: list[str] = []
+    img: str = ""
 
     async def handle_upload(self, file: pc.UploadFile):
-        self.img = await file.read()
+
+        img = await file.read()
+
+        outfile = os.path.join(ROOTDIR, f".web/public/{file.filename}")
+
+        # Save the file.
+        with open(outfile, "wb") as file_object:
+            file_object.write(img)
+        self.img = file.filename
+        self.ocr_results = edcdb.identify(img)
+
 
     def search_set_text(self, text: str):
         self.search_text = text
@@ -28,15 +42,9 @@ class State(pc.State):
         return edcdb.api('v1', 'search', self.search_text)[:10]
 
     @pc.var
-    def fetch_results(self) -> str:
-        print(self.fetch_text)
-        print(edcdb.api('v1','fetch', self.fetch_text))
-        #return self.fetch_text
-        return json.dumps(edcdb.api('v1','fetch', self.fetch_text))
+    def fetch_results(self) -> list[str]:
+        return [json.dumps(r) for r in edcdb.api('v1','fetch', self.fetch_text)[:10]]
 
-    @pc.var
-    def ocr_result(self) -> str:
-        return edcdb.identify(self.img)
 
 async def api(ver: str, func: str, query: str):
     if ver != 'v1':
@@ -47,41 +55,74 @@ async def api(ver: str, func: str, query: str):
         return edcdb.api('v1', 'search', query)
 
 
-def img_upload():
-    return pc.input(
-        type=pc.InputType.FILE,
-        on_change=State.set_img,
+def ocr():
+    return pc.vstack(
+        pc.upload(
+            pc.vstack(
+                pc.button("Select File",),
+                pc.text("Drag and drop files here or click to select files"),
+            ),
+        ),
+        pc.button("Upload",
+            on_click=lambda: State.handle_upload(pc.upload_files()),
+        ),
+        pc.image(src=State.img, width="25%", height="25%"),
+        pc.vstack(
+            pc.foreach(State.ocr_results, lambda res: pc.text(res)),
+        )
     )
 
-def search() -> pc.Component:
-    return pc.vstack(
+
+def search():
+    return pc.box(
         pc.input(
             placeholder="Search EDCDB...",
             value=State.search_text,
             on_change=State.search_set_text,
         ),
-        pc.foreach(State.search_results, lambda result: pc.text(result)),
+        pc.vstack(
+            pc.foreach(State.search_results, lambda result: pc.text(result)),
+            overflow="auto",
+            height="15em",
+            width="100%",
+        ))
+
+def fetch():
+    return pc.box(
         pc.input(
             placeholder="Fetch EDCDB...",
             value=State.fetch_text,
             on_change=State.fetch_set_text,
         ),
-        pc.text(State.fetch_results),
-    )
-
-
-
-def index() -> pc.Component:
-    return pc.center(
         pc.vstack(
-            #navbar(),
-            search()
-
+            pc.foreach(State.fetch_results, lambda res: pc.text(res)),
+            overflow="auto",
+            height="15em",
+            width="100%",
         )
     )
-import os
-p = os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','data','Endoscreen_database.csv')
-edcdb = EDCDB(p)
+
+def navbar():
+    return pc.box(
+        pc.hstack(
+            pc.image(src="favicon.ico"),
+            pc.heading("My App"),
+        ),
+        pc.spacer(),
+        pc.menu(
+            pc.menu_button("Menu"),
+        ),
+    )
+
+def index() -> pc.Component:
+    return pc.vstack(
+        #navbar(),
+        ocr(),
+        search(),
+        fetch(),
+    )
+
+edcdb = EDCDB()
 
 # Add state and page to the app.
 app = pc.App(state=State)
